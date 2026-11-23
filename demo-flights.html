@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo flight search — Pilot (seeded data)</title>
+<meta name="description" content="Standalone demo flight-search page for Pilot. All flights are seeded demo data, not live fares.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<main class="page demo-page">
+  <span class="demo-badge">DEMO — SEEDED DATA</span>
+  <h1 style="font-size: 26px; margin: 14px 0 6px;">Flight search</h1>
+  <p style="color: var(--muted); margin-bottom: 18px;">This is the demo page Pilot
+  operates. Every flight is generated for the route and date you pick — the
+  prices are seeded demo data, not live fares, and nothing here books anything.</p>
+
+  <section class="panel"><div class="panel-body">
+    <form class="flight-form" id="flightForm" style="margin-top: 0;">
+      <div class="field">
+        <label for="flightOrigin">From</label>
+        <select id="flightOrigin"></select>
+      </div>
+      <div class="field">
+        <label for="flightDestination">To</label>
+        <select id="flightDestination"></select>
+      </div>
+      <div class="field">
+        <label for="flightDate">Date</label>
+        <input id="flightDate" type="date">
+      </div>
+      <div class="field">
+        <label for="flightSort">Sort by</label>
+        <select id="flightSort">
+          <option value="cheapest">Cheapest</option>
+          <option value="fastest">Fastest</option>
+          <option value="earliest">Earliest</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">Search flights</button>
+    </form>
+
+    <div class="results-head">
+      <h3 id="resultsTitle">Results</h3>
+      <span class="count" id="resultsCount"></span>
+    </div>
+    <ul class="results" id="resultsList"></ul>
+    <p class="results-empty" id="resultsEmpty">Pick a route and a date, then search. The same search always returns the same flights.</p>
+  </div></section>
+
+  <p style="margin-top: 16px; font-size: 13px; color: var(--faint);">
+    <a href="index.html">← Back to Pilot</a> · Demo data only. No booking, no payment, no account access.
+  </p>
+</main>
+
+<script src="js/intent.js"></script>
+<script src="js/flights.js"></script>
+<script>
+
+const $ = (id) => document.getElementById(id);
+const origin = $('flightOrigin'), dest = $('flightDestination'),
+      date = $('flightDate'), sort = $('flightSort'),
+      list = $('resultsList'), empty = $('resultsEmpty'),
+      count = $('resultsCount'), title = $('resultsTitle');
+
+for (const sel of [origin, dest]) {
+  for (const a of AIRPORTS) {
+    const opt = document.createElement('option');
+    opt.value = a.code;
+    opt.textContent = `${a.city} (${a.code})`;
+    sel.appendChild(opt);
+  }
+}
+origin.value = 'DEL';
+dest.value = 'BLR';
+date.value = formatISO(nextWeekday('friday', new Date()));
+
+$('flightForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  list.innerHTML = '';
+  if (origin.value === dest.value) {
+    empty.hidden = false;
+    empty.textContent = 'Origin and destination are the same city — pick a different destination.';
+    count.textContent = '';
+    return;
+  }
+  const flights = generateFlights(origin.value, dest.value, date.value);
+  const sorted = sortFlights(flights, sort.value);
+  empty.hidden = true;
+  count.textContent = `${sorted.length} flights · ${SORT_LABELS[sort.value].toLowerCase()} · demo data`;
+  title.textContent = `Results — ${airportCity(origin.value)} to ${airportCity(dest.value)} · ${formatDateLabel(date.value)}`;
+  for (const f of sorted) {
+    const li = document.createElement('li');
+    li.className = 'flight-row' + (f.id === sorted[0].id ? ' winner' : '');
+    li.innerHTML =
+      `<div><div class="airline">${f.airline}${f.id === sorted[0].id ? '<span class="winner-tag">Best match</span>' : ''}</div>` +
+      `<div class="flight-no">${f.flightNo} · Non-stop</div></div>` +
+      `<div class="times">${f.depart} – ${f.arrive}<span>${airportCity(f.origin)} → ${airportCity(f.destination)}</span></div>` +
+      `<div class="dur">${f.duration}</div>` +
+      `<div class="price">${formatINR(f.price)}<span>per person · demo fare</span></div>`;
+    list.appendChild(li);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"dependencies":{"playwright":"1.65.1"},"description":"Real-browser driver for Pilot's demo flight page (Playwright 1.65.1).","license":"MIT","name":"voice-computer-agent-playwright","private":true,"type":"module","version":"1.0.0"}

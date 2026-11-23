@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pilot — Voice-controlled computer agent</title>
+<meta name="description" content="Say what you want done — “book me the cheapest flight Friday” — and Pilot works the browser in front of you, narrating each step, and stops honestly before login and payment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+    </span>
+    <div>
+      <div class="brand-name">Pilot</div>
+      <div class="brand-sub">Voice-controlled computer agent</div>
+    </div>
+  </div>
+  <div class="top-actions">
+    <span class="demo-badge">DEMO — SEEDED DATA</span>
+    <button class="btn" id="settingsBtn" type="button">Settings</button>
+  </div>
+</header>
+
+<main class="page">
+  <div class="intro">
+    <h1>Say it. Watch it get done.</h1>
+    <p>Say <strong>“book me the cheapest flight Friday”</strong> and Pilot opens the
+    flight search, fills the form, sorts by price and highlights the cheapest
+    option — narrating each step. It stops at the results: booking needs your
+    account and payment, so it never pretends to finish that part.</p>
+  </div>
+
+  <div class="console-grid">
+    <!-- ============ Left: command console ============ -->
+    <div class="command-stack">
+      <section class="panel" aria-labelledby="commandTitle">
+        <div class="panel-body">
+          <h2 class="panel-title" id="commandTitle">1 · Give a command</h2>
+          <div class="mic-row">
+            <button class="mic-btn" id="micBtn" type="button" aria-label="Start listening">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+            </button>
+            <div class="mic-status" id="micStatus"><strong>Tap the mic and speak</strong>or type below — typing always works.</div>
+          </div>
+          <div class="transcript" id="transcript" aria-live="polite"></div>
+          <p class="mic-note">In Chrome, speech is sent to Google’s recognition service by
+          default. Nothing you say is stored by Pilot. If the mic is unavailable, type instead.</p>
+
+          <form class="command-form" id="commandForm">
+            <input id="commandInput" type="text" autocomplete="off"
+              placeholder="e.g. book me the cheapest flight Friday"
+              aria-label="Type a command">
+            <button class="btn btn-primary" type="submit" id="understandBtn">Understand</button>
+          </form>
+          <div class="chips" id="exampleChips" aria-label="Example commands"></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="intentTitle">
+        <div class="panel-body">
+          <h2 class="panel-title" id="intentTitle">2 · Check what it understood</h2>
+          <div id="intentEmpty" class="feed-empty">No command yet. Speak or type one above — the parsed intent appears here for you to check before anything runs.</div>
+          <div id="intentArea" hidden>
+            <div class="intent-card">
+              <h3>Flight search <span class="parse-badge local" id="parseBadge">Parsed locally</span></h3>
+              <div class="intent-grid">
+                <div class="field">
+                  <label for="intentOrigin">From</label>
+                  <select id="intentOrigin"></select>
+                </div>
+                <div class="field">
+                  <label for="intentDestination">To <span class="default-tag" id="destDefaultTag" hidden>from your default</span></label>
+                  <select id="intentDestination"></select>
+                </div>
+                <div class="field">
+                  <label for="intentDate">Date</label>
+                  <input id="intentDate" type="date">
+                </div>
+                <div class="field">
+                  <label for="intentPassengers">Passengers</label>
+                  <input id="intentPassengers" type="number" min="1" max="9" step="1">
+                </div>
+                <div class="field">
+                  <label for="intentSort">Sort by</label>
+                  <select id="intentSort">
+                    <option value="cheapest">Cheapest</option>
+                    <option value="fastest">Fastest</option>
+                    <option value="earliest">Earliest</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Resolved date</label>
+                  <input id="intentDateLabel" type="text" readonly aria-readonly="true">
+                </div>
+              </div>
+              <p class="intent-note" id="intentNote"></p>
+              <div class="intent-actions">
+                <button class="btn btn-primary" id="runBtn" type="button">Run it</button>
+                <button class="btn" id="clearIntentBtn" type="button">Start over</button>
+              </div>
+            </div>
+          </div>
+          <div id="unsupportedArea" class="unsupported" hidden></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="feedTitle">
+        <div class="panel-body">
+          <h2 class="panel-title" id="feedTitle">3 · Watch it work</h2>
+          <ol class="feed" id="feed"></ol>
+          <p class="feed-empty" id="feedEmpty">Each step the agent takes is narrated here, in order.</p>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="historyTitle">
+        <div class="panel-body">
+          <h2 class="panel-title" id="historyTitle">Past runs</h2>
+          <ul class="history-list" id="historyList"></ul>
+          <p class="history-empty" id="historyEmpty">No runs yet. Finished runs are saved here, on this device only.</p>
+          <div style="margin-top: 12px;">
+            <button class="btn btn-ghost" id="clearHistoryBtn" type="button">Clear history</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel limits" aria-labelledby="limitsTitle">
+        <div class="panel-body">
+          <h2 id="limitsTitle">What Pilot cannot do</h2>
+          <ul>
+            <li>It cannot complete a real booking — that needs your account, passenger details and payment.</li>
+            <li>Flight prices here are seeded demo data, not live fares.</li>
+            <li>It only does flight search in this build — no hotels, no other tasks yet.</li>
+            <li>Real flight sites may block automation or show CAPTCHAs; the demo runs on the labelled demo page.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ Right: the browser window it operates ============ -->
+    <section class="panel browser-window" aria-labelledby="browserTitle">
+      <div class="browser-bar">
+        <div class="traffic" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="url-pill"><strong>pilot.demo</strong>/flights — seeded demo data</div>
+        <span class="demo-badge">DEMO DATA</span>
+      </div>
+      <div class="browser-body">
+        <h2 id="browserTitle">Flight search</h2>
+        <p class="demo-label">Demo page with seeded flights. Prices and times are generated
+        for the route and date — they are not live fares. <a href="demo-flights.html">Open the demo page on its own</a>.</p>
+
+        <form class="flight-form" id="flightForm">
+          <div class="field">
+            <label for="flightOrigin">From</label>
+            <select id="flightOrigin"></select>
+          </div>
+          <div class="field">
+            <label for="flightDestination">To</label>
+            <select id="flightDestination"></select>
+          </div>
+          <div class="field">
+            <label for="flightDate">Date</label>
+            <input id="flightDate" type="date">
+          </div>
+          <div class="field">
+            <label for="flightSort">Sort by</label>
+            <select id="flightSort">
+              <option value="cheapest">Cheapest</option>
+              <option value="fastest">Fastest</option>
+              <option value="earliest">Earliest</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" type="submit">Search flights</button>
+        </form>
+
+        <div class="results-head">
+          <h3 id="resultsTitle">Results</h3>
+          <span class="count" id="resultsCount"></span>
+        </div>
+        <ul class="results" id="resultsList"></ul>
+        <p class="results-empty" id="resultsEmpty">No search yet. Run a command, or search by hand — the form works on its own.</p>
+
+        <div class="stop-card" id="stopCard" hidden>
+          <h3>Stopped here — on purpose.</h3>
+          <p id="stopText">Booking needs your account, passenger details and payment, so Pilot
+          does not go further. The search is done: the cheapest flight is highlighted above.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <span>Pilot — voice-controlled computer agent. Built by Sivasai Boggu, 2026.</span>
+  <a href="PLAN.md">Deepened plan</a>
+  <a href="README.md">README</a>
+  <span>Demo data only. No booking, no payment, no account access.</span>
+</footer>
+
+<dialog id="settingsDialog" aria-labelledby="settingsTitle">
+  <form method="dialog" class="dialog-body" id="settingsForm">
+    <h2 id="settingsTitle">Settings</h2>
+    <p class="dialog-sub">Saved on this device only (localStorage). The Gemini key is sent
+    only to Google’s Gemini API when parsing a command — never anywhere else.</p>
+    <div class="dialog-grid">
+      <div class="field">
+        <label for="setHomeCity">Home city (default origin)</label>
+        <select id="setHomeCity"></select>
+      </div>
+      <div class="field">
+        <label for="setDefaultDest">Default destination</label>
+        <select id="setDefaultDest"></select>
+      </div>
+      <div class="field">
+        <label for="setPassengers">Default passengers</label>
+        <input id="setPassengers" type="number" min="1" max="9" step="1">
+      </div>
+      <div class="field">
+        <label for="setMicLang">Microphone language</label>
+        <select id="setMicLang">
+          <option value="en-IN">English (India)</option>
+          <option value="en-US">English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="hi-IN">Hindi</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label for="setGeminiKey">Gemini API key (free tier, optional)</label>
+        <div class="key-row">
+          <input id="setGeminiKey" type="password" autocomplete="off"
+            placeholder="Paste your free key from Google AI Studio">
+          <button class="btn" id="testKeyBtn" type="button">Test key</button>
+        </div>
+        <p class="key-status" id="keyStatus">Without a key, Pilot parses commands locally — that always works for flight commands.</p>
+      </div>
+      <div class="field full">
+        <label class="check-row"><input type="checkbox" id="setNarration"> Speak each step out loud (speech synthesis)</label>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" id="settingsCloseBtn" type="button">Close</button>
+      <button class="btn btn-primary" id="settingsSaveBtn" type="submit">Save settings</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="js/intent.js"></script>
+<script src="js/flights.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
