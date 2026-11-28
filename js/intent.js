@@ -132,9 +132,11 @@ function resolveDate(text, today = new Date()) {
     return formatISO(date);
   }
 
+  // "day after tomorrow" must be checked before "tomorrow": it contains
+  // the word "tomorrow", and the plain check below would match first.
+  if (/\bday after tomorrow\b/.test(lower)) return formatISO(addDays(base, 2));
   if (/\btomorrow\b/.test(lower)) return formatISO(addDays(base, 1));
   if (/\btoday\b/.test(lower)) return formatISO(base);
-  if (/\bday after tomorrow\b/.test(lower)) return formatISO(addDays(base, 2));
 
   // "this friday" = the upcoming one, including today.
   m = lower.match(/\bthis\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\b/);

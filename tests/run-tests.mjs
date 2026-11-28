@@ -209,3 +209,16 @@ test('formatDuration renders hours and minutes', () => {
   assert.equal(formatDuration(115), '1h 55m');
   assert.equal(formatDuration(45), '45m');
 });
+
+
+test('resolveDate: "day after tomorrow" is 25 Nov 2026, not tomorrow', () => {
+  assert.equal(resolveDate('flight day after tomorrow', TODAY), '2026-11-25');
+  assert.equal(resolveDate('fly to mumbai day after tomorrow', TODAY), '2026-11-25');
+});
+
+test('parseCommand: "day after tomorrow" survives the full parse', () => {
+  const intent = parseCommand('book me a flight from Delhi to Mumbai day after tomorrow', { today: TODAY });
+  assert.equal(intent.action, 'flight_search');
+  assert.equal(intent.date, '2026-11-25');
+  assert.deepEqual(intent.filledFromDefaults, ['passengers']);
+});
